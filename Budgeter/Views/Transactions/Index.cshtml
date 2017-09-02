@@ -1,0 +1,437 @@
+﻿@model IEnumerable<Budgeter.Models.Transaction>
+@using Budgeter.Helper;
+@using Microsoft.AspNet.Identity;
+
+@{ 
+    var userId = User.Identity.GetUserId();
+}
+
+<h2><i class="fa fa-money" aria-hidden="true"></i> @ViewBag.account.Name Transactions</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#transactionModal"><i class="fa fa-plus-square-o" aria-hidden="true"></i> Add transaction</button>
+    </div>
+    <div class="col-md-2">
+        <h4>Balance:</h4>
+        <p><strong>$@BankAccountHelper.Balance(ViewBag.account.Id)</strong></p>
+    </div>
+    @if (TempData["refresh"] == "refresh")
+    {
+        <div class="col-md-2">
+            <a href="transactions/index?accountId=@ViewBag.account.Id"><button class="btn btn-info">Restore all Transactions</button></a>
+        </div>
+    }
+    @if (RoleHelper.IsUserInRole(userId, "Head") || RoleHelper.IsUserInRole(userId, "Admin"))
+    {
+        <div class="col-md-4">
+            <i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i>
+            <h4 class="text-warning"> Click a table row to edit that transaction.</h4>
+        </div>
+    }
+</div>
+<div class="row">
+    @if (RoleHelper.IsUserInRole(userId, "Head") || RoleHelper.IsUserInRole(userId, "Admin"))
+    {
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Edit Transaction</h3>
+                </div>
+                @using (Html.BeginForm("edit", "transactions", new { BankAccountId = ViewBag.account.Id, returnUrl = Url.Action("index", "transactions", new { accountId = ViewBag.account.Id }) }, FormMethod.Post, new { role = "form", id = "transactionformEdit" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input name="Id" style="display:none;" value="" id="transactionIdEdit" />
+                    <div class="panel-body" id="transactionBodyEdit">
+                        <label for="expenseEdit">Expense</label>
+                        <input type="radio" name="Expense" id="expenseEdit" value="True" />
+                        <label for="incomeEdit">Income</label>
+                        <input type="radio" name="Expense" id="incomeEdit" value="False" />
+                        <br />
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-calendar" aria-hidden="true"></i></span>
+                            <input type="text" id="DateEdit" style="width:150px; background-color:white;" name="Date" placeholder="Date" class="form-control" readonly required />
+                        </div>
+                        <br />
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-usd" aria-hidden="true"></i></span>
+                            <input type="text" style="width:150px; background-color:white;" value="" id="EditAmount" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and cents" required name="Amount" placeholder="Amount" class="form-control" readonly />
+                        </div>
+                        <br />
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-usd" aria-hidden="true"></i></span>
+                            <input type="text" style="width:150px;" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and cents" required name="ReconciledAmount" placeholder="Reconciled Amount" class="form-control" />
+                        </div>
+                        <br />
+                        @Html.DropDownList("BudgetItemId", null, new { @class = "form-control", style = "width:200px;", id = "BudgetItemIdEdit" })
+                        <br id="lastBreakEdit" />
+                    </div>
+                }
+                <div class="panel-footer">
+                    <button class="btn btn-success btn-block" form="transactionformEdit" id="submitEdit" type="submit" disabled><i class="fa fa-edit"></i> Edit</button>
+                    <button class="btn btn-danger btn-block" type="button" data-toggle="modal" data-target="#deleteTransaction" id="deleteEdit" disabled><i class="fa fa-times" aria-hidden="true"></i> Delete</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <h4 class="panel-title">Transactions</h4>
+                        </div>
+                        @using (Html.BeginForm("index", "transactions", new { accountId = ViewBag.account.Id }, FormMethod.Post, new { @class = "form-inline" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="col-md-4">
+                                <h5 style="text-center">Filter Transactions by Amount</h5>
+                                <input type="text" class="form-control" style="width:100px;" id="filterAmount1" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and cents" name="filterAmount" placeholder="Min" />
+                                <input type="text" class="form-control" style="width:100px;" id="filterAmount2" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and cents" name="filterAmount" placeholder="Max" />
+                            </div>
+                            <div class="col-md-4">
+                                <h5 style="text-center">Filter Transactions by Date</h5>
+                                <input type="text" class="form-control" style="width:100px; background-color:white;" name="filterDate" id="filterDate1" placeholder="Earliest" />
+                                <input type="text" class="form-control" style="width:100px; background-color:white;" name="filterDate" id="filterDate2" placeholder="Latest" />
+                            </div>
+                            <div class="col-md-2">
+                                <h5 style="visibility:hidden">" "</h5>
+                                <button class="btn btn-social-icon btn-info" id="filterSubmit" type="submit"><i class="fa fa-search" aria-hidden="true"></i></button>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="body">
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="transactionTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Created By</th>
+                                <th>Amount</th>
+                                <th>Budget Category</th>
+                                <th style="display:none;">transaction Id</th>
+                                <th style="display:none">Expense</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="transactionRow">
+                                    <td>
+                                        <input class="transactionInput" value="@item.Date" style="display:none;" />
+                                        @item.Date.ToString("d")
+                                    </td>
+                                    <td>@item.EnteredBy.FullName</td>
+                                    <td>
+                                        @if (item.Expense)
+                                        {
+                                            <span>Amount: <i class="fa fa-minus-circle" style="color:red;" aria-hidden="true"></i> $@item.Amount</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Amount: <i class="fa fa-plus-circle" style="color:green;" aria-hidden="true"></i> $@item.Amount</span>
+                                        }
+                                        @if (item.ReconciledAmount > 0 && item.ReconciledExpense)
+                                        {
+                                            <br />
+                                            <span>Reconciled Amount: <i class="fa fa-minus-circle" style="color:red;" aria-hidden="true"></i> $@item.ReconciledAmount</span>
+                                        }
+                                        else if (item.ReconciledAmount > 0 && !(item.ReconciledExpense))
+                                        {
+                                            <br />
+                                            <span>Reconciled Amount: <i class="fa fa-plus-circle" style="color:green;" aria-hidden="true"></i> $@item.ReconciledAmount</span>
+                                        }
+                                        <input class="transactionInput2" value=@item.Amount style="display:none;" />
+                                    </td>
+                                    <td>
+                                        @if (item.BudgetItemId != null)
+                                        {
+                                            <span>@item.BudgetItem.Name</span>
+                                            <input class="transactionInput3" value=@item.BudgetItemId style="display:none;" />
+                                        }
+                                        else
+                                        {
+                                            <span>Income</span>
+                                        }
+                                    </td>
+                                    <td style="display:none">
+                                        <input class="transactionInput4" value=@item.Id style="display:none;" />
+                                    </td>
+                                    <td style="display:none">
+                                        <input class="transactionInput5" value=@item.Expense.ToString() style="display:none;" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <h4 class="panel-title">Transactions</h4>
+                        </div>
+                        @using (Html.BeginForm("index", "transactions", new { accountId = ViewBag.account.Id }, FormMethod.Post, new { @class = "form-inline" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="col-md-4">
+                                <h5 style="text-center">Filter Transactions by Amount</h5>
+                                <input type="text" class="form-control" style="width:100px;" id="filterAmount1" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and cents" name="filterAmount" placeholder="Min" />
+                                <input type="text" class="form-control" style="width:100px;" id="filterAmount2" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and cents" name="filterAmount" placeholder="Max" />
+                            </div>
+                            <div class="col-md-4">
+                                <h5 style="text-center">Filter Transactions by Date</h5>
+                                <input type="text" class="form-control" style="width:100px; background-color:white;" name="filterDate" id="filterDate1" placeholder="Earliest" />
+                                <input type="text" class="form-control" style="width:100px; background-color:white;" name="filterDate" id="filterDate2" placeholder="Latest" />
+                            </div>
+                            <div class="col-md-2">
+                                <h5 style="visibility:hidden">" "</h5>
+                                <button class="btn btn-social-icon btn-info" id="filterSubmit" type="submit"><i class="fa fa-search" aria-hidden="true"></i></button>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="body">
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="transactionTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Created By</th>
+                                <th>Amount</th>
+                                <th>Budget Category</th>
+                                <th style="display:none;">transaction Id</th>
+                                <th style="display:none">Expense</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="transactionRow">
+                                    <td>
+                                        <input class="transactionInput" value="@item.Date" style="display:none;" />
+                                        @item.Date.ToString("d")
+                                    </td>
+                                    <td>@item.EnteredBy.FullName</td>
+                                    <td>
+                                        @if (item.Expense)
+                                        {
+                                            <span>Amount: <i class="fa fa-minus-circle" style="color:red;" aria-hidden="true"></i> $@item.Amount</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Amount: <i class="fa fa-plus-circle" style="color:green;" aria-hidden="true"></i> $@item.Amount</span>
+                                        }
+                                        @if (item.ReconciledAmount > 0 && item.ReconciledExpense)
+                                        {
+                                            <br />
+                                            <span>Reconciled Amount: <i class="fa fa-minus-circle" style="color:red;" aria-hidden="true"></i> $@item.ReconciledAmount</span>
+                                        }
+                                        else if (item.ReconciledAmount > 0 && !(item.ReconciledExpense))
+                                        {
+                                            <br />
+                                            <span>Reconciled Amount: <i class="fa fa-plus-circle" style="color:green;" aria-hidden="true"></i> $@item.ReconciledAmount</span>
+                                        }
+                                        <input class="transactionInput2" value=@item.Amount style="display:none;" />
+                                    </td>
+                                    <td>
+                                        @if (item.BudgetItemId != null)
+                                        {
+                                            <span>@item.BudgetItem.Name</span>
+                                            <input class="transactionInput3" value=@item.BudgetItemId style="display:none;" />
+                                        }
+                                        else
+                                        {
+                                            <span>Income</span>
+                                        }
+                                    </td>
+                                    <td style="display:none">
+                                        <input class="transactionInput4" value=@item.Id style="display:none;" />
+                                    </td>
+                                    <td style="display:none">
+                                        <input class="transactionInput5" value=@item.Expense.ToString() style="display:none;" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
+<!---Transaction Modal-->
+
+@using (Html.BeginForm("create", "transactions", new {BankAccountId = ViewBag.account.Id, returnUrl = Url.Action("index", "transactions", new { accountId = ViewBag.account.Id }) }, FormMethod.Post, new { role = "form", id = "transactionForm" }))
+{
+    @Html.AntiForgeryToken()
+    <div id="transactionModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Add Transaction</h4>
+                </div>
+                <div class="modal-body" id="transactionBody">
+                    <label for="expense">Expense</label>
+                    <input type="radio" name="Expense" id="expense" value="true" checked />
+                    <label for="income">Income</label>
+                    <input type="radio" name="Expense" id="income" value="false" />
+                    <br />
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar" aria-hidden="true"></i></span>
+                        <input type="text" id="Date" style="width:150px; background-color:white;" name="Date" value="" placeholder="Date" class="form-control" readonly  />
+                    </div>
+                    <br />
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-usd" aria-hidden="true"></i></span>
+                        <input type="text" style="width:150px;" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and cents" required name="Amount" placeholder="Amount" class="form-control" />
+                    </div>
+                    <br />
+                    @Html.DropDownList("BudgetItemId", null, new { @class = "form-control", style = "width:200px;" })
+                    <br id="lastBreak" />
+                    <button class="btn btn-lg btn-success btn-block" id="transactionSubmit" type="submit"><i class="fa fa-plus-circle"></i> Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!----delete Transaction Modal-->
+
+@using (Html.BeginForm("delete", "transactions", FormMethod.Post, new { id = "deleteTransactionForm"}))
+{
+    @Html.AntiForgeryToken()
+    <div id="deleteTransaction" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:30%; background-color:white;">
+            <div class="modal-header">
+                <h4 class="modal-title">Are you sure you want to delete this transaction?</h4>
+            </div>
+            <div class="modal-body" style="display:flex; justify-content:space-around">
+                <button class="btn btn-success" type="submit">Yes</button>
+                <button class="btn btn-danger" type="button" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        var budgetNode = document.getElementById('BudgetItemId');
+        var submitNode = document.getElementById('lastBreak');
+        $("#income").click(function() {
+            $('#transactionBody #BudgetItemId').remove();
+        });
+
+        document.getElementById('expense').addEventListener("click", function () {
+            document.getElementById('transactionBody').insertBefore(budgetNode, submitNode)
+        });
+
+        $('#Date').datepicker();
+    </script>
+
+    <script>
+        var budgetNodeEdit = document.getElementById('BudgetItemIdEdit');
+        var submitNodeEdit = document.getElementById('lastBreakEdit');
+
+        $("#incomeEdit").click(function () {
+            $('#transactionBodyEdit #BudgetItemIdEdit').remove();
+        });
+
+        document.getElementById('expenseEdit').addEventListener("click", function () {
+            document.getElementById('transactionBodyEdit').insertBefore(budgetNodeEdit, submitNodeEdit)
+        });
+
+        $('#transactionTable').DataTable();
+        $('#filterDate1').datepicker();
+        $('#filterDate2').datepicker();
+
+    </script>
+    <!----Script for Edit panel-->
+    <script>
+        //Variable Declarations
+        var budgetNodeEdit = document.getElementById('BudgetItemIdEdit');
+        var submitNodeEdit = document.getElementById('lastBreakEdit');
+        var transactionAmountEdit;
+        var transactionDateEdit;
+        var transactionBudgetItemEdit;
+        var transactionIdEdit;
+        var transactionExpenseEdit;
+
+        //Main function triggers on click event / assign variables
+        $('#transactionTable').on('click', 'tbody tr', function (e) {
+            transactionAmountEdit = $(this).find('input.transactionInput2').val();
+            transactionDateEdit = $(this).find('input.transactionInput').val();
+            if ($(this).find('input.transactionInput3').val() != 'Income') {
+                transactionBudgetItemEdit = $(this).find('input.transactionInput3').val();
+            }
+            transactionIdEdit = $(this).find('input.transactionInput4').val();
+            transactionExpenseEdit = $(this).find('input.transactionInput5').val();
+
+            //Set Values for Edit Form
+            $('#EditAmount').val(transactionAmountEdit);
+            $('#transactionIdEdit').val(transactionIdEdit);
+            $('#DateEdit').val(transactionDateEdit);
+            if (transactionExpenseEdit == 'True') {
+                $('#expenseEdit').prop('checked', true);
+            }
+            else {
+                $('#incomeEdit').prop('checked', true);
+            };
+
+            //Enable Sumit, Delete, and Void buttons once Amount and Date inputs are filled
+            if ($('#EditAmount').val() != "" && $('#DateEdit').val() != "") {
+                $('#submitEdit').prop('disabled', false);
+                $('#voidEdit').prop('disabled', false);
+                $('#deleteEdit').prop('disabled', false);
+            };
+
+            //disable datepicker unit Date input is filled
+            if ($('#DateEdit').val() != "") {
+                $('#DateEdit').datepicker();
+            };
+
+            //Remove BudgetItems List if income radio is checked
+            if ($('#incomeEdit').is(':checked')) {
+                $('#transactionBodyEdit #BudgetItemIdEdit').remove();
+            };
+
+            //Replace BudgetItems List if expense radio is checked
+            if ($('#expenseEdit').is(':checked')) {
+                document.getElementById('transactionBodyEdit').insertBefore(budgetNodeEdit, submitNodeEdit)
+            };
+
+            //BudgetItem List select value is last in case it has been previously removed
+            $('#BudgetItemIdEdit').children().each(function () {
+                $(this).children().each(function () {
+                    if ($(this).val() == transactionBudgetItemEdit) {
+                        $(this).prop('selected', true);
+                    }
+                });
+            });
+
+            //set transaction Id and return Url for Delete button
+            $('#deleteTransactionForm').prop('action', 'transactions/delete?id=' + transactionIdEdit + '&returnUrl=' + '@Url.Action("index", "transactions", new {accountId = ViewBag.account.Id })');
+        });
+    </script>
+    <!---Scripts for filter search-->
+    <script>
+        $('#filterSubmit').click(function () {
+            if ($('#filterAmount2').val() == 0) {
+                $('#filterAmount2').val(@ViewBag.maxAmount);
+            }
+            if ($('#filterDate1').val() == "") {
+                $('#filterDate1').val("1/1/0001");
+            }
+            if ($('#filterDate2').val() == "") {
+                $('#filterDate2').val("@ViewBag.maxDate");
+            }
+        });
+    </script>
+}

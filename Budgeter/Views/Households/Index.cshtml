@@ -1,0 +1,26 @@
+﻿@model Budgeter.Models.Household
+
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header">Nothung</h1>
+    </div>
+
+    <!---Begin Household invite form-->
+    @if (User.IsInRole("Admin") || User.IsInRole("Head"))
+    {
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Invite Others to Join Your Household</h3>
+                </div>
+                <div class="panel-body">
+                    <form action="/Invitations/Create" method="post" role="form">
+                        @Html.AntiForgeryToken()
+                        <input type="email" name="Email" placeholder="Email" pattern="\w+" title="alphanumeric characters" />
+                        <button type="submit" class="btn btn-info"><i class="fa fa-paper-plane-o" aria-hidden="true"></i> Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

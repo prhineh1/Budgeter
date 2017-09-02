@@ -1,0 +1,147 @@
+﻿@using Microsoft.Owin.Security
+@{
+    Layout = null;
+    var loginProviders = Context.GetOwinContext().Authentication.GetExternalAuthenticationTypes();
+}
+@using Budgeter.Models
+@model LoginViewModel
+<!DOCTYPE html>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
+
+<!-- BEGIN HEAD -->
+<head>
+     <meta charset="UTF-8" />
+    <title>BCORE Admin Dashboard Template | Login Page</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+	<meta content="" name="description" />
+	<meta content="" name="author" />
+     <!--[if IE]>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <![endif]-->
+    <!-- GLOBAL STYLES -->
+     <!-- PAGE LEVEL STYLES -->
+    <link rel="stylesheet" href="~/Content/font-awesome.css" />
+    <link rel="stylesheet" href="~/assets/plugins/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/assets/css/login.css" />
+    <link rel="stylesheet" href="~/assets/plugins/magic/magic.css" />
+    <link href="~/assets/css/bootstrap-social.css" rel="stylesheet" />
+     <!-- END PAGE LEVEL STYLES -->
+   <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+</head>
+    <!-- END HEAD -->
+
+    <!-- BEGIN BODY -->
+<body >
+
+   <!-- PAGE CONTENT --> 
+    <div class="container">
+
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4 text-center" style="margin-bottom:30px;">
+                <h3>Budgeter</h3>
+            </div>
+            <div class="col-md-4 col-md-offset-4">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Please Sign In</h3>
+                    </div>
+                    <div class="panel-body">
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                        <form role="form" action="/Account/Login" method="post">
+                            @Html.AntiForgeryToken()
+                            <fieldset>
+                                <div class="form-group">
+                                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder="Email", autofocus = "autofocus" })
+                                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="form-group">
+                                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder="Password" })
+                                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        @Html.CheckBoxFor(m => m.RememberMe)
+                                        @Html.LabelFor(m => m.RememberMe)
+                                    </label>
+                                    <a href="" data-toggle="modal" data-target="#sendEmail" style="float:right">Forgot Password?</a>
+                                </div>
+                                <button class="btn btn-lg btn-success btn-block" type="submit"><i class="fa fa-sign-in"></i> Login</button>
+                            </fieldset>
+                        </form>
+                        <hr />
+                        <p style="text-align:center;">Or Login with a Social Media Account.</p>
+                        @using (Html.BeginForm("ExternalLogin", "Account"))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-social-icon btn-reddit" name="provider" value="@loginProviders.ElementAt(0).AuthenticationType" type="submit"><i class="fa fa-reddit"></i></button>
+                            <button class="btn btn-social-icon btn-github" name="provider" value="@loginProviders.ElementAt(1).AuthenticationType" type="submit"><i class="fa fa-github"></i></button>
+                            <button class="btn btn-social-icon btn-google" name="provider" value="@loginProviders.ElementAt(2).AuthenticationType" type="submit"><i class="fa fa-google-plus"></i></button>
+                        }
+                    </div>
+                </div>
+            </div>
+            @if (TempData["notify"] == "emailSent")
+            {
+                <div class="col-md-4 col-md-offset-4" style="text-align:center;">
+                    <h4 class="text-info">Please check your email to reset your password.</h4>
+                </div>
+            }
+            else if (TempData["notify"] == "resetConfirm")
+            {
+                <div class="col-md-4 col-md-offset-4" style="text-align:center;">
+                    <h4 class="text-info">Your password has successfully been reset.</h4>
+                </div>
+            }
+            else
+            {
+                <div class="col-md-4 col-md-offset-4" style="text-align:center;">
+                    <a href="/Account/Register">Don't have an account? Create an account.</a>
+                </div>
+            }
+        </div>
+    </div>
+
+
+    <!-- Modal -->
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="sendEmail" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Forgot Password?</h4>
+                </div>
+                @using (Html.BeginForm("ForgotPassword", "Account", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <p>Enter your e-mail address below to reset your password.</p>
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control placeholder-no-fix", @placeholder = "Email" })
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                        <button class="btn btn-theme" type="submit">Submit</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- modal -->
+
+
+	  <!--END PAGE CONTENT -->     
+	      
+      <!-- PAGE LEVEL SCRIPTS -->
+      <script src="~/assets/plugins/jquery-2.0.3.min.js"></script>
+      <script src="~/assets/plugins/bootstrap/js/bootstrap.js"></script>
+      <script src="~/assets/js/login.js"></script>
+      <!--END PAGE LEVEL SCRIPTS -->
+
+</body>
+    <!-- END BODY -->
+</html>

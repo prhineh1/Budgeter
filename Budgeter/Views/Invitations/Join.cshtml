@@ -1,0 +1,117 @@
+﻿@{
+    Layout = null;
+}
+@model Budgeter.Models.Invitation
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Budgeter</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="" name="description" />
+    <meta content="" name="author" />
+    @if (TempData["warn"] == "deleted")
+    {
+        <meta http-equiv="refresh" content="5; url=@Url.Action("index","home", null, protocol: Request.Url.Scheme)" />
+    }
+    <!--[if IE]>
+       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+       <![endif]-->
+    <!-- GLOBAL STYLES -->
+    <!-- PAGE LEVEL STYLES -->
+    <link rel="stylesheet" href="~/Content/font-awesome.css" />
+    <link rel="stylesheet" href="~/assets/plugins/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/assets/css/login.css" />
+    <link rel="stylesheet" href="~/assets/plugins/magic/magic.css" />
+    <!-- END PAGE LEVEL STYLES -->
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+</head>
+<!-- END HEAD -->
+
+<body>
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4 text-center" style="margin-bottom:30px;">
+                <h3>Budgeter</h3>
+            </div>
+            <div class="col-md-4 col-md-offset-4">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Please Enter Your Code</h3>
+                    </div>
+                    <div class="panel-body">
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                        <form role="form" action="/Invitations/Join" method="post">
+                            @Html.AntiForgeryToken()
+                            @Html.HiddenFor(Model => Model.Id)
+                            <fieldset>
+                                <div class="form-group">
+                                    <input class="form-control" type="text" name="code" placeholder="Enter Your Code Here" autofocus />
+                                </div>
+                                <div class="form-group">
+                                    <input name="Email" class="form-control" type="email" placeholder="Email" />
+                                </div>
+                                @if (Model.expired || TempData["warn"] == "user")
+                                {
+                                    <button class="btn btn-lg btn-success btn-block" type="submit" disabled><i class="fa fa-sign-in"></i> Login</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-lg btn-success btn-block" type="submit"><i class="fa fa-arrow-circle-up" aria-hidden="true"></i> Submit</button>
+                                }
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @if (TempData["warn"] == "user")
+            {
+                <div class="col-md-4 col-md-offset-4" style="text-align:center;">
+                    <h4 >It appears you're already a member of a household. You must leave your current household before joining another.</h4>
+                </div>
+            }
+            else if (TempData["warn"] == "accepted")
+            {
+                <div class="col-md-4 col-md-offset-4" style="text-align:center;">
+                    <h4 >You have already accepted an invitation to another Household.</h4>
+                </div>
+            }
+            else if (Model.expired)
+            {
+                <div class="col-md-4 col-md-offset-4" style="text-align:center;">
+                    <h4 >Sorry, this code has expired.</h4>
+                </div>
+            }
+            else if (TempData["warn"] == "emailCode")
+            {
+                <div class="col-md-4 col-md-offset-4" style="text-align:center;">
+                    <h4>Either the Code or Email entered are incorrect; please try again.</h4>
+                </div>
+            }
+            else if (TempData["warn"] == "deleted")
+            {
+                <div class="col-md-4 col-md-offset-4" style="text-align:center;">
+                    <h4>This Household no longer exists; you are being redirected back to the home page.</h4>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Core Scripts - Include with every page -->
+    <script src="~/assets/plugins/jquery-2.0.3.min.js"></script>
+    <script src="~/assets/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="~/assets/js/login.js"></script>
+
+</body>
+</html>
+
+
+
