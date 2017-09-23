@@ -3,11 +3,14 @@
 
 <div class="row" style="display:flex; align-items:center">
     <div class="col-md-6">
-        <h3>@ViewBag.household.Name Budget Items</h3>
+        <h3><i class="fa fa-star-o" aria-hidden="true"></i> @ViewBag.household.Name Budget Items</h3>
     </div>
-    <div class="col-md-4">
-        <button class="btn btn-info" data-target="#BudgetCreateModal" data-toggle="modal"><i class="fa fa-plus-square" aria-hidden="true"></i> Add a new Budget Category</button>
-    </div>
+    @if (ViewBag.permission)
+    {
+        <div class="col-md-4">
+            <button class="btn btn-info" data-target="#BudgetCreateModal" data-toggle="modal"><i class="fa fa-plus-square" aria-hidden="true"></i> Add a new Budget Category</button>
+        </div>
+    }
 </div>
 <hr />
 
@@ -17,27 +20,36 @@
         <div class="panel panel-info">
             <input style="display:none;" value="@item.Id" id="BudgetId" />
             <div class="panel-heading">
-                <h4 class="panel-title" style="text-align:center;">@item.Name</h4>
+                <h4 class="panel-title" style="text-align:center;">
+                    @item.Name
+                    @if (item.over)
+                     {
+                        <i class="fa fa-exclamation animated infinite bounce" aria-hidden="true" style="color:red;"></i>
+                     }
+                </h4>
                 <div class="text-info" style="text-align:center;">Allocated Budget: $@item.Amount</div>
             </div>
-            <div class="panel-body">
+            <div class="panel-body" style="max-height:90px; overflow:auto;">
                 @foreach(var budgetItem in item.BudgetItems.ToList())
                 {
                     <div class="row">
                         <div class="col-md-7">
-                            @budgetItem.Name
+                            <span>@budgetItem.Name</span>
                         </div>
                         <div class="col-md-5">
-                            Spent: $@BudgetHelper.BudgetItemExpense(budgetItem.Id)
+                            Spent: $@BankAccountHelper.BudgetItemAmount(budgetItem.Id)
                         </div>
                     </div>
                 }
             </div>
             <div class="panel-footer panel-info" style="display:flex; justify-content:center;">
                 <div class="btn-group">
-                    <button class="btn btn-danger deleteBudgetButton" data-toggle="modal" data-target="DeleteBudgetModal">Delete</button>
-                    <button class="btn btn-warning" data-toggle="modal" data-target="">Edit</button>
-                    <button class="btn btn-success" data-toggle="modal" data-target="">Add New Item</button>
+                    @if (ViewBag.permission)
+                    {
+                        <button class="btn btn-danger deleteBudgetButton" type="button" data-toggle="modal" data-target="DeleteBudgetModal">Delete</button>
+                        <button class="btn btn-warning editBudgetButton" data-toggle="modal" data-target="">Edit</button>
+                    }
+                    <button class="btn btn-success AddBudgetItemButton" data-toggle="modal" data-target="#AddBudgetItem">Add New Item</button>
                 </div>
             </div>
         </div>
@@ -60,7 +72,7 @@
                     <h5 style="text-align:center;" class="text-info">Give Your New Category a Name and set its Budget Limit.</h5>
                     <div class="row">
                         <div class="col-md-6">
-                            <input type="text" name="Name" pattern="[\w\s]+" title="alphanumeric" maxlength="30" class="form-control" placeholder="Name" required style="width:183px;" />
+                            <input type="text" name="Name" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" maxlength="30" class="form-control" placeholder="Name" required style="width:183px;" />
                         </div>
                         <div class="col-md-6">
                             <div class="input-group">
@@ -70,17 +82,17 @@
                         </div>
                     </div>
                     <br />
-                    <h5 style="text-align:center" class="text-info">Add Items by Typing a Name and Clicking the <button type="button" class="btn btn-success btn-social-icon"><i class="fa fa-plus" aria-hidden="true"></i></button> Button<br />(Note: A Category Without Items Can't Have Transactions)</h5>
+                    <h5 style="text-align:center" class="text-info">Add Items by Typing a Name and Clicking <button type="button" class="btn btn-success btn-social-icon"><i class="fa fa-plus" aria-hidden="true"></i></button>.<br />(Note: A Category Without Items Can't Have Transactions)</h5>
                     <div class="input-group">
                         <div class="input-group-btn">
                             <button class="btn btn-success" id="createBudgetItem1" type="button"><i class="fa fa-plus" aria-hidden="true"></i></button>
                         </div>
-                        <input type="text" id="budgetItemInpu1" maxlength="30" class="form-control" placeholder="Item Name" style="width:183px;" />
+                        <input type="text" id="budgetItemInpu1" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" maxlength="30" class="form-control" placeholder="Item Name" style="width:183px;" />
                     </div>
-                    <div style="text-align:center" class="text-success">Items Added: <strong id="budgetItemList"></strong> </div>
+                    <div style="text-align:center" class="text-success">Items Added:<br />(Click on an Item to Remove it) <strong id="budgetItemList"></strong> </div>
                 </div>
                 <div class="modal-footer" style="display:flex; justify-content:center;">
-                    <button class="btn btn-success btn-lg" id="BudgetFormSubmit" type="submit"><i class="fa fa-plus-square" aria-hidden="true"> Create Budget Category</i></button>
+                    <button class="btn btn-success btn-lg" id="BudgetFormSubmit" type="submit"><i class="fa fa-plus-square" aria-hidden="true"> Create Budget Item</i></button>
                 </div>
             </div>
         </div>
@@ -101,7 +113,7 @@
                 {
                     @Html.AntiForgeryToken()
                     <h3 class="text-warning" style="text-align:center" id="DeleteBudgetName"></h3>
-                    <p class="text-danger" style="text-align:center;">Warning: Deleting this Category will Also Delete all Budget Items Attached to it.</p>
+                    <p class="text-danger" style="text-align:center;"><strong>Warning: Deleting this Category will Also Delete all Associated Budget Items and Transactions!</strong></p>
                     <div style="display:flex; justify-content:center">
                         <button type="submit" class="btn btn-danger btn-large" name="id" id="deleteBudgetButton2" value=""><i class="fa fa-times" aria-hidden="true"></i> Delete Category</button>
                     </div>
@@ -110,7 +122,7 @@
                 @using(Html.BeginForm("delete","budgetitems", new { returnUrl = Request.Url.AbsoluteUri }, FormMethod.Post, new { id = "deleteBudgetItemForm"}))
                 {
                     @Html.AntiForgeryToken()
-                    <h4 class="text-warning" style="text-align:center">Select Which Items You want to Delete</h4>
+                    <p class="text-warning" style="text-align:center">Select Which Items You want to Delete<br /><strong class="text-danger">Warning: Deleting an Item will Also Delete All Associated Transactions!</strong></p>
                     <br />
                     <div id="BudgetItemDeleteListDropdown" style="display:flex; justify-content:center">
 
@@ -125,61 +137,118 @@
     </div>
 </div>
 
+<!---Edit Budget Modal-->
+<div class="modal fade" role="dialog" id="EditBudgetModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Edit Budget/Budget Items</h4>
+            </div>
+            <div class="modal-body">
+                <h3 class="text-info text-center" id="EditBudgetName"></h3>
+                <p><h3 class="text-info text-center" id="EditBudgetAmount"></h3></p>
+                <div class="row">
+                    <div class="col-md-6" style="display:flex; justify-content:center">
+                        <input type="text" id="editBudgetNameInput" class="form-control" name="Name" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" maxlength="30" placeholder="Name" style="width:183px;" />
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-usd" aria-hidden="true"></i></span>
+                            <input type="text" id="editBudgetAmountInput" class="form-control" name="Amount" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and Cents" style="width:150px;" placeholder="Budget Limit" />
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div style="display:flex; justify-content:center">
+                    <button class="btn btn-success btn-lg" type="button" id="EditBudgetAndAmountButton"><i class="fa fa-edit" aria-hidden="true"></i> Edit</button>
+                </div>
+                <hr />
+                <h3 class="text-info text-center" id="editBudgetItemName"></h3>
+                <div class="row" style="display:flex; justify-content:center">
+                    <div class="col-md-6">
+                        <select id="BudgetItemEditDropdown" style="width:200px; height:34px;" onchange="SetItemInput(this)"></select>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" id="editBudgetItemNameInput" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" class="form-control" name="Name" style="width:200px;" maxlength="30" placeholder="Item Name" />
+                    </div>
+                </div>
+                <br />
+                <div style="display:flex; justify-content:center">
+                    <button class="btn btn-success btn-lg" type="button" id="EditBudgetItemNameButton"><i class="fa fa-edit" aria-hidden="true"></i> Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Add Budget Item-->
+
+@using (Html.BeginForm("create", "BudgetItems", FormMethod.Post, new { @class = "form-inline", id = "BudgetItemCreateForm" }))
+{
+    @Html.AntiForgeryToken()
+    <div id="AddBudgetItem" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Create a New Budget Item</h4>
+                </div>
+                <div class="modal-body">
+                    <h5 style="text-align:center" class="text-info">Add Items by Typing a Name and Clicking <button type="button" class="btn btn-success btn-social-icon"><i class="fa fa-plus" aria-hidden="true"></i></button>.</h5>
+                    <div class="input-group">
+                        <div class="input-group-btn">
+                            <button class="btn btn-success" id="createBudgetItem2" type="button"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                        </div>
+                        <input type="text" id="budgetItemInpu2" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" maxlength="30" class="form-control" placeholder="Item Name" style="width:183px;" />
+                    </div>
+                    <div style="text-align:center" class="text-success">Items Added:<br />(Click on an Item to Remove it) <strong id="budgetItemList2"></strong> </div>
+                </div>
+                <div class="modal-footer" style="display:flex; justify-content:center;">
+                    <button class="btn btn-success btn-lg" id="BudgetFormSubmit2" type="submit"><i class="fa fa-plus-square" aria-hidden="true"> Create Budget Item</i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
-<!---Script for displaying Budget Items-->
+<!---Script Creating  Budget-->
     <script>
         var itemSet = [];
+        //push entered input into itemSet
         $('#createBudgetItem1').click(function () {
             if ($('#budgetItemInpu1').val().trim(" ") != "") {
                 itemSet.push($('#budgetItemInpu1').val());
             };
+            //display elements of item set on page
             for (i = 0; i < itemSet.length; i++) {
                 if (i == 0) {
-                    $('#budgetItemList').html(itemSet[i]);
+                    $('#budgetItemList').html('<span onclick="RemoveFromItemSet(this)"><br />' + itemSet[i] + '</span>');
                 }
                 else {
-                    $('#budgetItemList').append(', ' + itemSet[i])
+                    $('#budgetItemList').append('<span onclick="RemoveFromItemSet(this)"><br />' + itemSet[i] + '</span>')
                 }
             }
+
+            //Reset the input after each entry and update form action
             $('#budgetItemInpu1').val("")
             $('#BudgetCreateForm').prop('action', 'Budgets/create?householdId=' + '@ViewBag.household.Id' + '&budgetItems=' + itemSet + '&returnUrl=' + '@Request.Url.AbsoluteUri')
+            ChangeCursor()
         });
-    </script>
-<!-----DeleteBudgetModal-->
-    <script>
-        var currentPanel;
-        var budgetIdJs
-        $('.deleteBudgetButton').click(function () {
-            $('#deleteBudgetItemForm').find('#BudgetItemDeleteListDropdown').empty();
-            currentPanel = $(this).parents('div.panel.panel-info')
-            budgetIdJs = currentPanel.children('#BudgetId').val()
-            $.ajax({
-                url: '/Budgets/delete/',
-                data: {
-                    id: budgetIdJs
-                },
-                type: 'GET',
-                dataType: "json",
+
+        function ChangeCursor() {
+            $('#budgetItemList').children().each(function () {
+                $(this).css('cursor', 'default')
             })
-            .done(function (json) {
-                $('#DeleteBudgetName').html(json.name);
-                $('#deleteBudgetButton2').val(budgetIdJs);
-                for (i = 0; i < json.budgetItemNamesList.length; i++) {
-                    if (i == 0) {
-                        $('#BudgetItemDeleteListDropdown').append("<select multiple id='budgetItemsSelectDelete' name='Ids'><option value=" + json.budgetItemIdsList[i] + ">" + json.budgetItemNamesList[i] + "</option></select>")
-                    }
-                    else {
-                        $('#budgetItemsSelectDelete').append("<option value=" + json.budgetItemIdsList[i] + ">" + json.budgetItemNamesList[i] + "</option>")
-                    }
-                };
-                $('#budgetItemsSelectDelete').multiSelect({
-                    selectableHeader: "<div class='custom-header' style='text-align:center; font-size:1.2em'>Available</div>",
-                    selectionHeader: "<div class='custom-header' style='text-align:center; font-size:1.2em'>Delete</div>"
-                });
-                $('#DeleteBudgetModal').modal('toggle');
-            })
-        });
+        }
+
+        function RemoveFromItemSet(obj) {
+            obj.remove();
+            var removed = itemSet.splice(itemSet.indexOf($(obj).text()), 1);
+            $('#BudgetCreateForm').prop('action', 'Budgets/create?householdId=' + '@ViewBag.household.Id' + '&budgetItems=' + itemSet + '&returnUrl=' + '@Request.Url.AbsoluteUri')
+        }
     </script>
+
 }
 

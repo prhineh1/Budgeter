@@ -5,20 +5,30 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using Budgeter.Models;
+using Budgeter.Models.ViewModels;
+using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace Budgeter.Controllers
 {
     [RequireHttps]
-    [Authorize]
     public class HomeController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
 
         public ActionResult Index()
         {
-            var userId = User.Identity.GetUserId();
-            var user = db.Users.Find(userId);
-            return View(user);
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = User.Identity.GetUserId();
+                var user = db.Users.Find(userId);
+                ViewBag.householdId = user.HouseHoldId;
+            }
+            else
+            {
+                ViewBag.householdId = null;
+            }
+            ViewBag.permission = User.Identity.IsAuthenticated;
+            return View();
         }
 
         public ActionResult About()
@@ -41,6 +51,18 @@ namespace Budgeter.Controllers
             var count = db.Notifications.Where(n => n.UserId == userId).Count().ToString();
 
             return Content(count, "string");
+        }
+
+        public ActionResult _SharedPartial()
+        {
+            var userId = User.Identity.GetUserId();
+            var user = db.Users.Find(userId);
+            var viewModel = new _SharedPartialViewModel()
+            {
+                User = db.Users.Find(userId),
+                Notifications = db.Notifications.Where(n => n.UserId == userId).ToList()
+            };
+            return View(viewModel);
         }
     }
 }

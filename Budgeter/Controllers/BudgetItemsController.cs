@@ -7,6 +7,8 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using Budgeter.Models;
+using Microsoft.Ajax.Utilities;
+using Newtonsoft.Json;
 
 namespace Budgeter.Controllers
 {
@@ -49,18 +51,24 @@ namespace Budgeter.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,Name,BudgetId,HouseholdId")] BudgetItem budgetItem)
+        public ActionResult Create(int BudgetId, string BudgetItems)
         {
-            if (ModelState.IsValid)
+            var BudgetItemsList = BudgetItems.Split(",".ToCharArray()).ToList();
+            var householdid = db.Budgets.Find(BudgetId).HouseholdId;
+            foreach (var name in BudgetItemsList)
             {
+                var budgetItem = new BudgetItem()
+                {
+                    Name = name,
+                    HouseholdId = householdid,
+                    BudgetId = BudgetId
+                };
                 db.BudgetItems.Add(budgetItem);
-                db.SaveChanges();
-                return RedirectToAction("Index");
             }
 
-            ViewBag.BudgetId = new SelectList(db.Budgets, "Id", "Name", budgetItem.BudgetId);
-            ViewBag.HouseholdId = new SelectList(db.Households, "Id", "Name", budgetItem.HouseholdId);
-            return View(budgetItem);
+            db.SaveChanges();
+            return RedirectToAction("Index","Budgets", new { householdId = householdid});
+
         }
 
         // GET: BudgetItems/Edit/5
@@ -75,28 +83,32 @@ namespace Budgeter.Controllers
             {
                 return HttpNotFound();
             }
-            ViewBag.BudgetId = new SelectList(db.Budgets, "Id", "Name", budgetItem.BudgetId);
-            ViewBag.HouseholdId = new SelectList(db.Households, "Id", "Name", budgetItem.HouseholdId);
-            return View(budgetItem);
+
+            return Content(budgetItem.Name, "string");
         }
 
         // POST: BudgetItems/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "Id,Name,BudgetId,HouseholdId")] BudgetItem budgetItem)
         {
-            if (ModelState.IsValid)
+            var editBudgetItem = db.BudgetItems.Find(budgetItem.Id);
+            if (!budgetItem.Name.IsNullOrWhiteSpace())
             {
-                db.Entry(budgetItem).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                editBudgetItem.Name = budgetItem.Name;
             }
-            ViewBag.BudgetId = new SelectList(db.Budgets, "Id", "Name", budgetItem.BudgetId);
-            ViewBag.HouseholdId = new SelectList(db.Households, "Id", "Name", budgetItem.HouseholdId);
-            return View(budgetItem);
-        }
+            db.Entry(editBudgetItem).State = EntityState.Modified;
+            db.SaveChanges();
+
+            var result = new
+            {
+                name = editBudgetItem.Name,
+                Id = editBudgetItem.Id
+            };
+
+            return Content(JsonConvert.SerializeObject(result), "application/json");
+            }
 
         // GET: BudgetItems/Delete/5
         public ActionResult Delete(int? id)
@@ -118,9 +130,17 @@ namespace Budgeter.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(List<int> Ids, string returnUrl)
         {
+            if (Ids == null)
+            {
+                return Redirect(returnUrl);
+            }
             foreach(var id in Ids)
             {
                 BudgetItem budgetItem = db.BudgetItems.Find(id);
+                foreach(var transaction in budgetItem.Transactions.ToList())
+                {
+                    db.Transactions.Remove(transaction);
+                }
                 db.BudgetItems.Remove(budgetItem);
             }
             db.SaveChanges();

@@ -67,9 +67,6 @@ namespace Budgeter
             });
 
             app.UseGitHubAuthentication("5b0aab2aa76de3b82c45", "02e69f5348bf625d0cb51a8884570566e400e02b");
-
-            app.UseRedditAuthentication("QeJNF586v19IcQ", "	F-uB3HNKMFEnp3c8EWqQpPvS7D4");
-
         }
     }
 }

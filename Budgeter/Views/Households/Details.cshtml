@@ -1,16 +1,16 @@
 ﻿@model Budgeter.Models.Household
-@using Budgeter.Helper;
 @using Microsoft.AspNet.Identity;
 @using Budgeter.Models;
 
 @{ 
     var userId = User.Identity.GetUserId();
 }
+<script>var householdId = '@Model.Id'</script>
 <div class="row" style="display:flex; align-items:flex-end;">
     <div class="col-lg-5">
-        <h2>@Model.Name</h2>
+        <h2><i class="fa fa-home" aria-hidden="true"></i> @Model.Name</h2>
     </div>
-    @if (RoleHelper.IsUserInRole(userId, "Admin") || RoleHelper.IsUserInRole(userId, "Head"))
+    @if (ViewBag.permission)
     {
         <div class="col-lg-4">
             <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteHousehold"><i class="fa fa-times" aria-hidden="true"></i> Delete Household</button>
@@ -26,7 +26,7 @@
 <hr />
 <div class="row">
     <!---Begin Household invite form-->
-    @if (RoleHelper.IsUserInRole(userId, "Admin") || RoleHelper.IsUserInRole(userId,"Head"))
+    @if (ViewBag.permission)
     {
         <div class="col-md-4">
             <div class="panel panel-default">
@@ -37,8 +37,10 @@
 
                     <form action="/Invitations/Create" method="post" role="form">
                         @Html.AntiForgeryToken()
-                        <input type="email" name="Email" placeholder="Email" />
-                        <button type="submit" class="btn btn-info"><i class="fa fa-paper-plane-o" aria-hidden="true"></i> Send</button>
+                        <div style="display:flex; justify-content:space-between">
+                            <input type="email" name="Email" maxlength="60" placeholder="Email" required />
+                            <button type="submit" class="btn btn-info"><i class="fa fa-paper-plane-o" aria-hidden="true"></i> Send</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -51,7 +53,7 @@
             <div class="panel-heading">
                 <h3 class="panel-title">Users</h3>
             </div>
-            <div class="panel-body">
+            <div class="panel-body" style="max-height:70px; overflow:auto;">
                 @foreach (var user in Model.Users.ToList())
                 {
                     <span>@user.FullName - <a href="mailto:@user.Email">@user.Email</a></span><br />
@@ -59,24 +61,40 @@
             </div>
         </div>
     </div>
-    @if (RoleHelper.IsUserInRole(userId, "Head") || RoleHelper.IsUserInRole(userId, "Admin"))
-    {
-        <div class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Add a bank Account</h3>
-                </div>
-                <div class="panel-body">
-                    @using (Html.BeginForm("create", "bankaccounts", new { HouseholdId = Model.Id }))
-                    {
-                        @Html.AntiForgeryToken()
-                        <input type="text" name="Name" placeholder="Name" />
+
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Add a bank Account</h3>
+            </div>
+            <div class="panel-body">
+                @using (Html.BeginForm("create", "bankaccounts", new { HouseholdId = Model.Id }))
+                {
+                    @Html.AntiForgeryToken()
+                    <div style="display:flex; justify-content:space-between">
+                        <input type="text" name="Name" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" required maxlength="30" placeholder="Name" />
                         <button type="submit" class="btn btn-info"><i class="fa fa-bank" aria-hidden="true"></i> Create</button>
-                    }
-                </div>
+                    </div>
+                }
             </div>
         </div>
-    }
+    </div>
+</div>
+<div class="row" id="barChartRow">
+    <div class="col-md-9">
+        <canvas id="budgetGraphs"></canvas>
+    </div>
+    <div class="col-md-3">
+        <h6 class="text-info text-center"><strong>Choose an Option from the Dropdown List.</strong></h6>
+        <select id="BudgetDropdownChart" style="width:200px;">
+            <option value="0">All Budgets</option>
+            <option value="-1">Income vs. Expenses</option>
+            @foreach(Budget item in ViewBag.Budgets)
+            {
+                <option value="@item.Id">@item.Name</option>
+            }
+        </select>
+    </div>
 </div>
 
 
@@ -115,6 +133,8 @@
         </div>
     </div>
 }
+
+
 
 
 

@@ -12,6 +12,8 @@ namespace Budgeter.Models
         public DateTimeOffset Created { get; set; }
         public int? Account { get; set; }
         public decimal? Balance { get; set; }
+        public int? Budget { get; set; }
+        public decimal? Over { get; set; }
 
         [AllowHtml]
         public string NotifyReason { get; set; }
@@ -21,6 +23,5 @@ namespace Budgeter.Models
 
         //Nav
         public ApplicationUser User { get; set; }
-        public Household Household { get; set; }
     }
 }

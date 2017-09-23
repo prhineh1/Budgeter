@@ -18,7 +18,7 @@ namespace Budgeter.Controllers
         private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET: BankAccounts
-        public ActionResult Index(int householdId)
+        public async System.Threading.Tasks.Task<ActionResult> Index(int householdId)
         {
             var userId = User.Identity.GetUserId();
             var user = db.Users.Find(userId);
@@ -31,7 +31,13 @@ namespace Budgeter.Controllers
                 return RedirectToAction("details", "home", new { id = user.HouseHoldId });
             }
             var bankAccounts = db.BankAccounts.Where(b => b.HouseholdId == householdId);
+            foreach (var account in bankAccounts)
+            {
+                account.Balance = BankAccountHelper.Balance(account.Id);
+            }
             ViewBag.BudgetItemId = new SelectList(db.BudgetItems.Where(b => b.HouseholdId == householdId).ToList(), "Id", "Name", "Budget.Name", null, null);
+            ViewBag.permission =  RoleHelper.IsUserInRole(userId, "Head") ||  RoleHelper.IsUserInRole(userId, "Admin");
+            ViewBag.householdId = db.Users.Find(userId).HouseHoldId;
 
             return View(bankAccounts.OrderBy(b => b.Id).ToList());
         }
@@ -48,10 +54,10 @@ namespace Budgeter.Controllers
                 db.BankAccounts.Add(bankAccount);
                 db.SaveChanges();
                 NotificationHelper.NewBankAccount(bankAccount.HouseholdId, User.Identity.GetUserId(), bankAccount.Name);
-                return RedirectToAction("index", "BankAccounts", new { id = bankAccount.HouseholdId});
+                return RedirectToAction("index", "BankAccounts", new { householdId = bankAccount.HouseholdId});
             }
 
-            return RedirectToAction("index", "BankAccounts", new { id = bankAccount.HouseholdId });
+            return RedirectToAction("index", "BankAccounts", new { householdId = bankAccount.HouseholdId });
         }
 
         // POST: BankAccounts/Delete/5

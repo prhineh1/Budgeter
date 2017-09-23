@@ -3,49 +3,19 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 
 namespace Budgeter.Models
 {
     public class BankAccount
     {
         public int Id { get; set; }
+
+        [AllowHtml]
         public string Name { get; set; }
 
-        //[NotMapped]
-        //private decimal balance = 0;
-
         public decimal Balance { get; set; }
-        //{
-        //    get
-        //    {
-        //        if (this.Transactions.Count() > 0)
-        //        {
-        //    balance = 0;
-        //    foreach (var transaction in this.Transactions.ToList())
-        //    {
-        //        if (transaction.Expense && transaction.ReconciledAmount == 0)
-        //        {
-        //            balance -= transaction.Amount;
-        //        }
-        //        else if (transaction.Expense && transaction.ReconciledAmount > 0)
-        //        {
-        //            balance -= transaction.ReconciledAmount;
-        //        }
-        //        else if (!transaction.Expense && transaction.ReconciledAmount == 0)
-        //        {
-        //            balance += transaction.Amount;
-        //        }
-        //        else if (!transaction.Expense && transaction.ReconciledAmount > 0)
-        //        {
-        //            balance += transaction.ReconciledAmount;
-        //        }
-        //    }
-        //    return balance;
-        //}
-        //        return balance;
-        //}
-        //    set {  }
-        //}
+
 
         //FK
         public int HouseholdId { get; set; }
@@ -57,6 +27,7 @@ namespace Budgeter.Models
         public BankAccount()
         {
             this.Transactions = new HashSet<Transaction>();
+            Balance = 0M;
         }
     }
 }

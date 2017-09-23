@@ -8,7 +8,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Budgeter</title>
+    <title>Sucre Lucre</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <meta content="" name="description" />
     <meta content="" name="author" />
@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="~/assets/plugins/bootstrap/css/bootstrap.css" />
     <link rel="stylesheet" href="~/assets/css/login.css" />
     <link rel="stylesheet" href="~/assets/plugins/magic/magic.css" />
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon">
     <!-- END PAGE LEVEL STYLES -->
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -30,13 +31,13 @@
 </head>
 <!-- END HEAD -->
 
-<body>
-
+<body style="background-color:#6d3f96">
+   
     <div class="container">
 
         <div class="row">
             <div class="col-md-4 col-md-offset-4 text-center" style="margin-bottom:30px;">
-                <h3>Budgeter</h3>
+                <img src="~/assetsLanding/img/Logomakr_7dwC2L.png" width="160" height="80" alt="Logo">
             </div>
             <div class="col-md-4 col-md-offset-4">
                 <div class="login-panel panel panel-default">
@@ -50,12 +51,10 @@
                             @Html.AntiForgeryToken()
                             <fieldset>
                                 <div class="form-group">
-                                    @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", placeholder = "First Name", autofocus = "autofocus" })
-                                    @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                                    <input name="FirstName" class="form-control" maxlength="30" placeholder="First Name" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" required autofocus />
                                 </div>
                                 <div class="form-group">
-                                    @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", placeholder = "Last Name", autofocus = "autofocus" })
-                                    @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
+                                    <input name="LastName" class="form-control" maxlength="30" placeholder="Last Name" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" required />
                                 </div>
                                 @if (ViewBag.email != null)
                                 {

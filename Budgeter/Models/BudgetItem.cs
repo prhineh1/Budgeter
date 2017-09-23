@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 
 namespace Budgeter.Models
 {
     public class BudgetItem
     {
         public int Id { get; set; }
+        [AllowHtml]
         public string Name { get; set; }
 
         //FK

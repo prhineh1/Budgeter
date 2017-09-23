@@ -221,6 +221,7 @@ namespace Budgeter.Controllers
         // GET: /Manage/ChangePassword
         public ActionResult ChangePassword()
         {
+            ViewBag.permission = HasPassword();
             return View();
         }
 
@@ -230,10 +231,19 @@ namespace Budgeter.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ChangePassword(ChangePasswordViewModel model)
         {
+            if (model.OldPassword == null)
+            {
+                if (!ModelState.IsValidField("NewPassword") || !ModelState.IsValidField("ConfirmPassword"))
+                {
+                    return View("ChangePassword", model);
+                }
+                goto permiss;
+            }
             if(!ModelState.IsValidField("OldPassword") || !ModelState.IsValidField("NewPassword") || !ModelState.IsValidField("ConfirmPassword"))
             {
                 return View("ChangePassword", model);
             }
+            permiss:
             var result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
             if (result.Succeeded)
             {

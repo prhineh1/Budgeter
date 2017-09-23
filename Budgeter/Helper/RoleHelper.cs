@@ -4,6 +4,7 @@ using Microsoft.AspNet.Identity.EntityFramework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace Budgeter.Helper
@@ -15,7 +16,7 @@ namespace Budgeter.Helper
 
         public static bool IsUserInRole(string userId, string roleName)
         {
-            return userManager.IsInRole(userId, roleName);
+            return  userManager.IsInRole(userId, roleName);
         }
         public static ICollection<string> ListUserRoles(string userId)
         {
@@ -30,30 +31,6 @@ namespace Budgeter.Helper
         {
             var result = userManager.RemoveFromRole(userId, roleName);
             return result.Succeeded;
-        }
-        public static ICollection<ApplicationUser> UsersInRole(string roleName)
-        {
-            var resultList = new List<ApplicationUser>();
-            var List = userManager.Users.ToList();
-            foreach (var user in List)
-            {
-                if (IsUserInRole(user.Id, roleName))
-                    resultList.Add(user);
-            }
-
-            return resultList;
-        }
-        public static ICollection<ApplicationUser> usersNotInRole(string roleName)
-        {
-            var resultList = new List<ApplicationUser>();
-            var List = userManager.Users.ToList();
-            foreach (var user in List)
-            {
-                if (!IsUserInRole(user.Id, roleName))
-                    resultList.Add(user);
-            }
-
-            return resultList;
         }
     }
 }

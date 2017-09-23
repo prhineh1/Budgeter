@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 
 namespace Budgeter.Models
 {
@@ -13,6 +14,7 @@ namespace Budgeter.Models
         public string code { get; set; }
 
         [EmailAddress]
+        [AllowHtml]
         public string Email { get; set; }
 
         public bool accepted { get; set; }

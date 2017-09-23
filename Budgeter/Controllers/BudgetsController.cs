@@ -9,6 +9,8 @@ using System.Web.Mvc;
 using Budgeter.Models;
 using Microsoft.AspNet.Identity;
 using Newtonsoft.Json;
+using Microsoft.Ajax.Utilities;
+using Budgeter.Helper;
 
 namespace Budgeter.Controllers
 {
@@ -18,7 +20,7 @@ namespace Budgeter.Controllers
         private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET: Budgets
-        public ActionResult Index(int householdId)
+        public async System.Threading.Tasks.Task<ActionResult> Index(int householdId)
         {
             var userId = User.Identity.GetUserId();
             var user = db.Users.Find(userId);
@@ -32,6 +34,23 @@ namespace Budgeter.Controllers
             }
             ViewBag.household = db.Households.Find(householdId);
             var budgets = db.Budgets.Include(b => b.Household).Include(b => b.BudgetItems).Where(b => b.HouseholdId == householdId);
+
+            foreach(var budget in budgets.ToList())
+            {
+                if (BankAccountHelper.OverBudget(budget.Id) > 0)
+                {
+                    budget.over = true;
+                }
+                else
+                {
+                    budget.over = false;
+                }
+                db.Entry(budget).State = EntityState.Modified;
+                db.SaveChanges();
+            }
+            db.SaveChanges();
+
+            ViewBag.permission =  RoleHelper.IsUserInRole(userId, "Head") ||  RoleHelper.IsUserInRole(userId, "Admin");
             return View(budgets.ToList());
         }
 
@@ -89,6 +108,7 @@ namespace Budgeter.Controllers
         }
 
         // GET: Budgets/Edit/5
+        [HttpGet]
         public ActionResult Edit(int? id)
         {
             if (id == null)
@@ -96,29 +116,59 @@ namespace Budgeter.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             Budget budget = db.Budgets.Find(id);
+            var itemNameList = db.BudgetItems.Where(b => b.BudgetId == id).OrderBy(b => b.Id).Select(b => b.Name).ToList();
+            var itemIdList = db.BudgetItems.Where(b => b.BudgetId == id).OrderBy(b => b.Id).Select(b => b.Id).ToList();
             if (budget == null)
             {
                 return HttpNotFound();
             }
-            ViewBag.HouseholdId = new SelectList(db.Households, "Id", "Name", budget.HouseholdId);
-            return View(budget);
+            var result = new
+            {
+                name = budget.Name,
+                amount = budget.Amount,
+                Id = budget.Id,
+                budgetItemsNameEdit = itemNameList,
+                budgetItemsIdEdit = itemIdList
+            };
+            return Content(JsonConvert.SerializeObject(result), "application/json");
         }
 
         // POST: Budgets/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "Id,Name,Amount,HouseholdId")] Budget budget)
         {
-            if (ModelState.IsValid)
+            var editBudget = db.Budgets.Find(budget.Id);
+            if (!budget.Name.IsNullOrWhiteSpace())
             {
-                db.Entry(budget).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                editBudget.Name = budget.Name;
             }
-            ViewBag.HouseholdId = new SelectList(db.Households, "Id", "Name", budget.HouseholdId);
-            return View(budget);
+
+            editBudget.Amount = budget.Amount;
+            db.Entry(editBudget).State = EntityState.Modified;
+
+            db.SaveChanges();
+
+            var over = BankAccountHelper.OverBudget(editBudget.Id);
+            if (over > 0)
+            {
+                editBudget.over = true;
+            }
+            else
+            {
+                editBudget.over = false;
+            }
+            db.Entry(editBudget).State = EntityState.Modified;
+            db.SaveChanges();
+
+            var result = new
+            {
+                name = editBudget.Name,
+                amount = editBudget.Amount,
+                over = over
+            };
+            return Content(JsonConvert.SerializeObject(result), "application/json");
         }
 
         // GET: Budgets/Delete/5
@@ -149,9 +199,21 @@ namespace Budgeter.Controllers
         // POST: Budgets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id, string returnUrl)
+        public ActionResult DeleteConfirmed(int? id, string returnUrl)
         {
+            if (id == null)
+            {
+                return Redirect(returnUrl);
+            }
+
             Budget budget = db.Budgets.Find(id);
+            foreach(var item in budget.BudgetItems.ToList())
+            {
+                foreach(var transaction in item.Transactions.ToList())
+                {
+                    db.Transactions.Remove(transaction);
+                }
+            }
             db.Budgets.Remove(budget);
             db.SaveChanges();
             return Redirect(returnUrl);

@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 
 namespace Budgeter
 {
-    [Authorize]
     public class InvitationsController : Controller
     {
         private EmailHelper emailHelper = new EmailHelper();
@@ -72,7 +71,7 @@ namespace Budgeter
                 var callbackUrl = Url.Action("Join", "Invitations", new {id = invitation.Id }, protocol: Request.Url.Scheme);
                 var message = new EmailMessage()
                 {
-                    SourceName = "Budgeter",
+                    SourceName = "Sucre Lucre",
                     SourceId = userId,
                     DestinationEmail = invitation.Email,
                     Subject = String.Concat(currentUser.FullName, " has invited you to join ", db.Households.FirstOrDefault(i => i.Id == invitation.HouseholdId).Name),
@@ -91,9 +90,10 @@ namespace Budgeter
         // GET: Invitations/Edit/5
         public ActionResult Join(int id)
         {
-            Invitation invitation = db.Invitations.Find(id);
+            Invitation invitation = db.Invitations.AsNoTracking().FirstOrDefault(i => i.Id == id);
             if (invitation == null)
             {
+                TempData["warn"] = "deleted";
                 return RedirectToAction("index", "home");
             }
 
@@ -118,12 +118,6 @@ namespace Budgeter
             if (ModelState.IsValid)
             {
                 var sentInvitation = db.Invitations.Find(invitation.Id);
-
-                if (db.Households.All(h => h.Id != sentInvitation.HouseholdId))
-                {
-                    TempData["warn"] = "deleted";
-                    return View();
-                }
 
                 if (invitation.code != sentInvitation.code || invitation.Email != sentInvitation.Email)
                 {

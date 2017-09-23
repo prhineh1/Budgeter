@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 
 namespace Budgeter.Models
 {
     public class Household
     {
         public int Id { get; set; }
+        [AllowHtml]
         public string Name { get; set; }
 
         //Nav
@@ -24,39 +26,6 @@ namespace Budgeter.Models
             this.Budgets = new HashSet<Budget>();
             this.Invitations = new HashSet<Invitation>();
             this.BudgetItems = new HashSet<BudgetItem>();
-
-            //var subCategories = new Dictionary<string, List<string>>()
-            //{
-            //    {"Utilities", new List<string>() {"Gas", "Electric", "Water" }},
-            //    {"Food and Groceries", new List<string>() { "Eating Out", "Kitchen Supplies", "Alcohol"}},
-            //    {"Housing", new List<string>() { "Maintenance and Repairs", "Insurance", "Taxes"}},
-            //    {"Entertainment", new List<string>() {"Movies", "Books", "Music" }}
-            //};
-
-            //int counter = 1;
-            //foreach (var category in subCategories.Keys)
-            //{
-            //    var budget = new Budget()
-            //    {
-            //        Name = category,
-            //        Amount = 500,
-            //        Id = counter
-            //    };
-
-            //    this.Budgets.Add(budget);
-
-            //    foreach (var subCategory in subCategories[category])
-            //    {
-            //        var budgetItem = new BudgetItem()
-            //        {
-            //            Name = subCategory,
-            //            Category = category,
-            //            BudgetId = counter
-            //        };
-            //        this.BudgetItems.Add(budgetItem);
-            //    }
-            //    counter++;
-            //}
         }
     }
 }

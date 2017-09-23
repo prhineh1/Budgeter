@@ -25,6 +25,7 @@
     <UseGlobalApplicationHostFile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -207,7 +208,6 @@
     </Compile>
     <Compile Include="Controllers\InvitationsController.cs" />
     <Compile Include="Helper\BankAccountHelper.cs" />
-    <Compile Include="Helper\BudgetHelper.cs" />
     <Compile Include="Helper\EmailHelper.cs" />
     <Compile Include="Helper\ImageUploadValidator.cs" />
     <Compile Include="Helper\NotificationHelper.cs" />
@@ -224,10 +224,33 @@
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\Notification.cs" />
     <Compile Include="Models\Transaction.cs" />
+    <Compile Include="Models\ViewModels\_SharedPartialViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="assetsLanding\css\animate.css" />
+    <Content Include="assetsLanding\css\bootstrap.min.css" />
+    <Content Include="assetsLanding\css\font-awesome.min.css" />
+    <Content Include="assetsLanding\css\main.css" />
+    <Content Include="assetsLanding\fonts\fontawesome-webfont.svg" />
+    <Content Include="assetsLanding\img\abstract_color_background_picture_8015.jpg" />
+    <Content Include="assetsLanding\img\be-the-first-bg.jpg" />
+    <Content Include="assetsLanding\img\header-bg.jpg" />
+    <Content Include="assetsLanding\img\IceCreamCone.png" />
+    <Content Include="assetsLanding\img\iphone.png" />
+    <Content Include="assetsLanding\img\logo.svg" />
+    <Content Include="assetsLanding\img\Logomakr_7dwC2L.png" />
+    <Content Include="assetsLanding\img\pexels-photo-370799.jpeg" />
+    <Content Include="assetsLanding\img\press-01.jpg" />
+    <Content Include="assetsLanding\img\press-02.jpg" />
+    <Content Include="assetsLanding\img\SucreLucreBig.png" />
+    <Content Include="assetsLanding\js\bootstrap.min.js" />
+    <Content Include="assetsLanding\js\jquery-1.11.0.min.js" />
+    <Content Include="assetsLanding\js\main.js" />
+    <Content Include="assetsLanding\js\modernizr-2.7.1.js" />
+    <Content Include="assetsLanding\js\wow.min.js" />
+    <Content Include="assets\css\animate.css" />
     <Content Include="assets\css\bootstrap-fileupload.min.css" />
     <Content Include="assets\css\bootstrap-social.css" />
     <Content Include="assets\css\bootstrap-wysihtml5-hack.css" />
@@ -272,6 +295,8 @@
     <Content Include="assets\img\user_old.gif" />
     <Content Include="assets\js\bar_chart.js" />
     <Content Include="assets\js\calendarInit.js" />
+    <Content Include="assets\js\Chart.bundle.min.js" />
+    <Content Include="assets\js\Chart.min.js" />
     <Content Include="assets\js\countdown.js" />
     <Content Include="assets\js\editorInit.js" />
     <Content Include="assets\js\formsInit.js" />
@@ -285,9 +310,11 @@
     <Content Include="assets\js\line_chart.js" />
     <Content Include="assets\js\login.js" />
     <Content Include="assets\js\mapsInit.js" />
+    <Content Include="assets\js\miscScripts.js" />
     <Content Include="assets\js\moreNoti.js" />
     <Content Include="assets\js\notifications.js" />
     <Content Include="assets\js\pie_chart.js" />
+    <Content Include="assets\js\randomColor.js" />
     <Content Include="assets\js\validationInit.js" />
     <Content Include="assets\js\WizardInit.js" />
     <Content Include="assets\plugins\animate\animate.css" />
@@ -1828,10 +1855,10 @@
     <Content Include="assets\plugins\wysihtml5\test\undo_manager_test.js" />
     <Content Include="Content\font-awesome.css" />
     <Content Include="Content\jquery.dataTables.css" />
+    <Content Include="favicon.ico" />
     <Content Include="fonts\fontawesome-webfont.svg" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
-    <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
@@ -2232,6 +2259,10 @@
     <Content Include="assets\plugins\validationengine\test\NanoHTTPD%24HTTPSession.class" />
     <Content Include="assets\plugins\validationengine\test\NanoHTTPD%24Response.class" />
     <Content Include="assets\plugins\validationengine\test\NanoHTTPD.class" />
+    <Content Include="assetsLanding\fonts\fontawesome-webfont.eot" />
+    <Content Include="assetsLanding\fonts\fontawesome-webfont.ttf" />
+    <Content Include="assetsLanding\fonts\fontawesome-webfont.woff" />
+    <Content Include="assetsLanding\fonts\FontAwesome.otf" />
     <None Include="Properties\PublishProfiles\prhinehart-FinancialPortal - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\prhinehart-FinancialPortal - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
@@ -2254,9 +2285,10 @@
     <Content Include="Uploads\Kafka.jpg" />
     <Content Include="Uploads\Me.jpg" />
     <Content Include="Views\Account\Login.cshtml" />
-    <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Views\Households\index.html" />
-    <Content Include="Web.config" />
+    <Content Include="Views\Home\index.cshtml" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -2266,10 +2298,8 @@
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
-    <Content Include="Views\Shared\_LayoutOld.cshtml" />
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Contact.cshtml" />
-    <Content Include="Views\Home\IndexOld.cshtml" />
     <Content Include="Views\Account\_ExternalLoginsListPartial.cshtml" />
     <Content Include="Views\Account\ConfirmEmail.cshtml" />
     <Content Include="Views\Account\ExternalLoginConfirmation.cshtml" />
@@ -2278,7 +2308,6 @@
     <Content Include="Views\Account\ForgotPasswordConfirmation.cshtml" />
     <Content Include="Views\Account\Register.cshtml" />
     <Content Include="Views\Account\ResetPassword.cshtml" />
-    <Content Include="Views\Account\ResetPasswordConfirmation.cshtml" />
     <Content Include="Views\Account\SendCode.cshtml" />
     <Content Include="Views\Account\VerifyCode.cshtml" />
     <Content Include="Views\Manage\AddPhoneNumber.cshtml" />
@@ -2314,6 +2343,7 @@
     <Content Include="Views\BudgetItems\Details.cshtml" />
     <Content Include="Views\BudgetItems\Edit.cshtml" />
     <Content Include="Views\BudgetItems\Index.cshtml" />
+    <Content Include="Views\Home\_SharedPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

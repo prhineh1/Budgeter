@@ -12,7 +12,6 @@ namespace Budgeter.Models
         public DateTime Date { get; set; }
         public decimal Amount { get; set; }
         public bool Expense { get; set; }
-        public bool Reconciled { get; set; }
         public bool ReconciledExpense { get; set; }
         public decimal ReconciledAmount { get; set; }
 

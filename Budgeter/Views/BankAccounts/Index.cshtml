@@ -3,35 +3,28 @@
 @using Budgeter.Helper;
 @using Microsoft.AspNet.Identity;
 
-@{
-    var userId = User.Identity.GetUserId();
-    ApplicationDbContext db = new ApplicationDbContext();
-    var user = db.Users.Find(userId);
-
-}
 
 <div class="row">
     <div class="col-md-4">
         <h2 class="text-info"><i class="fa fa-bank" aria-hidden="true"></i> Accounts</h2>
     </div>
-    @if (RoleHelper.IsUserInRole(userId, "Head") || RoleHelper.IsUserInRole(userId, "Admin"))
-    {
         <div class="col-md-4 col-md-offset-4" style="margin-top:10px;">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Add an Account</h3>
                 </div>
                 <div class="panel-body">
-                    @using (Html.BeginForm("create", "bankaccounts", new { HouseholdId = user.HouseHoldId }))
+                    @using (Html.BeginForm("create", "bankaccounts", new { HouseholdId = ViewBag.householdId }))
                     {
                         @Html.AntiForgeryToken()
-                        <input type="text" name="Name" placeholder="Account Name" pattern="\w+" title="alphanumeric characters" required />
-                        <button type="submit" class="btn btn-info"><i class="fa fa-plus-square-o" aria-hidden="true"></i> Create</button>
+                        <div style="display:flex; justify-content:center;">
+                            <input type="text" name="Name" maxlength="30" placeholder="Account Name" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" required />
+                            <button type="submit" class="btn btn-info"><i class="fa fa-plus-square-o" aria-hidden="true"></i> Create</button>
+                        </div>
                     }
                 </div>
             </div>
         </div>
-    }
 </div>
 
 <table class="table">
@@ -51,34 +44,39 @@
                     @account.Name
                 </td>
                 <td>
-                    $@BankAccountHelper.Balance(account.Id)
+                    $@account.Balance
                 </td>
                 <td>
-                    <a href="@Url.Action("index", "transactions", new {accountId = account.Id })">View Transactions</a>
+                    @if (account.Transactions.Count > 0)
+                    {
+                        <a href="@Url.Action("index", "transactions", new {accountId = account.Id })" class="btn btn-info">View Transactions</a>
+                    }
+                    else
+                    {
+                        <h4 class="text-info">No Transactions</h4>
+                    }
                 </td>
                 <td>
-                    @if (RoleHelper.IsUserInRole(userId, "Head") || RoleHelper.IsUserInRole(userId, "Admin"))
+                    @if (ViewBag.permission)
                     {
                         <div class="btn-group">
-                            <button data-toggle="modal" data-target="#transactionModal" class="addTransaction btn btn-success"><i class="fa fa-plus-square" aria-hidden="true"></i> Add Transaction</button>
-                            <button class="btn btn-danger" type="button" data-toggle="modal" id="DeleteAccountButton" data-target="#deleteAccount"><i class="fa fa-times" aria-hidden="true"></i> Delete Account</button>
+                            <button data-toggle="modal" data-target="#transactionModal" type="button" value="@account.Id" class="addTransaction btn btn-success"><i class="fa fa-plus-square" aria-hidden="true"></i> Add Transaction</button>
+                            <button class="btn btn-danger DeleteAccountButton" type="button" value="@account.Id" data-toggle="modal" data-target="#deleteAccount"><i class="fa fa-times" aria-hidden="true"></i> Delete Account</button>
                         </div>
                     }
                     else
                     {
-                        <button data-toggle="modal" data-target="#transactionModal" class="addTransaction btn btn-success btn-lg"><i class="fa fa-plus-square" aria-hidden="true"></i> Add Transaction</button>
+                        <button data-toggle="modal" data-target="#transactionModal" type="button" value="@account.Id" class="addTransaction btn btn-success btn-lg"><i class="fa fa-plus-square" aria-hidden="true"></i> Add Transaction</button>
                     }
                 </td>
             </tr>
             using (Html.BeginForm("Delete", "BankAccounts", new { returnUrl = Request.Url.AbsoluteUri }, FormMethod.Post, new { id = "DeleteAccountForm" }))
             {
                 @Html.AntiForgeryToken()
-                <input value="@account.Id"z name="id" class="accountId" style="display:none;" />
             }
             using (Html.BeginForm("create", "transactions", FormMethod.Post, new { role = "form", id = "transactionForm" }))
             {
                 @Html.AntiForgeryToken()
-                <input value="@account.Id" name="BankAccountId" style="display:none;" />
             }
 
         }
@@ -102,7 +100,7 @@
                     <br />
                     <div class="input-group">
                         <span class="input-group-addon"><i class="fa fa-calendar" aria-hidden="true"></i></span>
-                        <input type="text" id="Date" form="transactionForm" style="width:150px;" name="Date" placeholder="Date" class="form-control" readonly required />
+                        <input type="text" id="Date" form="transactionForm" style="width:150px; background-color:white;" name="Date" placeholder="Date" class="form-control" maxlength="0" required />
                     </div>
                     <br />
                     <div class="input-group">
@@ -110,9 +108,9 @@
                         <input type="text" style="width:150px;" form="transactionForm" pattern="[0-9]+(\.[0-9][0-9]?)?" title="Dollars and cents" name="Amount" placeholder="Amount" required class="form-control" />
                     </div>
                     <br />
-                    @Html.DropDownList("BudgetItemId", null, new { @class = "form-control", style="width:200px;" })   
+                    @Html.DropDownList("BudgetItemId", null, new { @class = "form-control", style = "width:200px;", form = "transactionForm" })                    
                     <br id="lastBreak" />
-                    <button class="btn btn-lg btn-success btn-block" form="transactionForm" id="transactionSubmit" type="submit"><i class="fa fa-plus-circle"></i> Add</button>
+                    <button class="btn btn-lg btn-success btn-block" value="" name="BankAccountId" form="transactionForm" id="transactionSubmit" type="submit"><i class="fa fa-plus-circle"></i> Add</button>
                 </div>
             </div>
         </div>
@@ -128,7 +126,7 @@
             <div class="modal-body">
                 <h5 class="text-danger">This Action will Remove all transactions associated with this account! <br />Do you still want to continue?</h5><br />
                 <div style="display:flex; justify-content:space-around">
-                    <button class="btn btn-success" form="DeleteAccountForm" type="submit">Yes</button>
+                    <button class="btn btn-success" value="" name="id" id="deleteAccountSubmit" form="DeleteAccountForm" type="submit">Yes</button>
                     <button class="btn btn-danger" type="button" data-dismiss="modal">No</button>
                 </div>
             </div>
@@ -151,10 +149,16 @@
 
         $('#Date').datepicker();
 
-        //var BankAccountId;
-        //$('.addTransaction').click(function () {
-        //    BankAccountId = $('#DeleteAccountForm input.accountId').val()
-        //    document.getElementById('transactionForm').action = "transactions/create/?BankAccountId=" + BankAccountId;
-        //});
+        //Delete account
+
+        $('.DeleteAccountButton').click(function () {
+            $('#deleteAccountSubmit').val($(this).val());
+        });
+
+        //Add transaction
+        $('.addTransaction').click(function () {
+            $('#transactionSubmit').val($(this).val());
+        });
+
     </script>
     }

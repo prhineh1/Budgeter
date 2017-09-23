@@ -1,40 +1,305 @@
-﻿@model Budgeter.Models.ApplicationUser
+﻿@model Budgeter.Models.RegisterViewModel
+@{ 
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <title>Sucre Lucre</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <meta property="og:title" content="">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="">
+	<meta property="og:site_name" content="">
+	<meta property="og:description" content="">
 
+  <!-- Styles -->
+  <link rel="stylesheet" href="~/Content/font-awesome.css">
+  <link rel="stylesheet" href="~/assetsLanding/css/animate.css">
+  <link href='https://fonts.googleapis.com/css?family=Raleway:400,100,200,300,500,600,700,800,900|Montserrat:400,700' rel='stylesheet' type='text/css'>
+  
 
+  <link rel="stylesheet" href="~/assetsLanding/css/bootstrap.min.css">
+  <link rel="stylesheet" href="~/assetsLanding/css/main.css">
 
+  <link rel="icon" href="~/favicon.ico" type="image/x-icon">
 
-            <div class="row">
-                <!-- Page Header -->
-                <div class="col-lg-12">
-                    <h1 class="page-header">Dashboard</h1>
-                </div>
-                <!--End Page Header -->
-                @if (Model.HouseHoldId == null)
+  <script src="~/assetsLanding/js/modernizr-2.7.1.js"></script>
+  
+</head>
+
+<body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @if (ViewBag.householdId != null)
                 {
-                    <div class="col-md-4">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Create a Household</h3>
-                            </div>
-                            <div class="panel-body">
-                                <form action="/households/create" role="form" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <div class="form-group">
-                                        <input type="text" name="Name" class="form-control" maxlength="15" placeholder="Enter a Name" required />
-                                    </div>
-                                    <div class="form-group">
-                                        <button class="btn btn-success btn-block" type="submit"><i class="fa fa-plus-square" aria-hidden="true"></i> Create Household</button>
-                                    </div>
-                                </form>
-                                @if(TempData["warn"] == "length")
-                                {
-                                    <div class="text-danger">An household must have a name.</div>
-                                }
-                            </div>
-                        </div>
-                    </div>
+                    <a class="logo" href="/households/details/@ViewBag.householdId"><img src="~/assetsLanding/img/Logomakr_7dwC2L.png" width="130" height="40" alt="Logo"></a>
+                }
+                else
+                {
+                    <img src="~/assetsLanding/img/Logomakr_7dwC2L.png" width="130" height="40" alt="Logo">
                 }
             </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    @if (ViewBag.permission && ViewBag.householdId == null)
+                    {
+                        <li><a href="#invite" class="scroll">Create a Household</a></li>
+                    }
+                    @if (!User.Identity.IsAuthenticated)
+                    {
+                        <li><a href="/account/login">Sign in</a></li>
+                    }
+                </ul>
+            </div><!--/.navbar-collapse -->
+        </div>
+    </div>
 
-   
+    <header>
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-6">
+                    @if (ViewBag.householdId != null)
+                    {
+                        <a class="logo" href="/households/details/@ViewBag.householdId"><img src="~/assetsLanding/img/Logomakr_7dwC2L.png" width="300" height="150" alt="Logo"></a>
+                    }
+                    else
+                    {
+                        <img src="~/assetsLanding/img/Logomakr_7dwC2L.png" width="300" height="150" alt="Logo">
+                    }
+                </div>
+                <div class="col-xs-6 signin text-right navbar-nav">
+                    @if (ViewBag.permission && ViewBag.householdId == null)
+                    {
+                        <a href="#invite" class="scroll">Create a Household</a>
+                    }
+                    &nbsp; &nbsp;
+                    @if (!User.Identity.IsAuthenticated)
+                    {
+                        <a href="/account/login">Sign in</a>
+                    }
+                </div>
+            </div>
 
+            <div class="row header-info">
+                <div class="col-sm-10 col-sm-offset-1 text-center">
+                    <h1 class="wow fadeIn">A Financial Planner</h1>
+                    <br />
+
+                    <div class="row">
+                        <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1">
+                            <div class="row">
+                                <div class="col-xs-6 text-right wow fadeInUp" data-wow-delay="1s">
+                                    <a href="#be-the-first" class="btn btn-secondary btn-lg scroll">Learn More</a>
+                                </div>
+                                <div class="col-xs-6 text-left wow fadeInUp" data-wow-delay="1.4s">
+                                    <a href="#pricing" class="btn btn-primary btn-lg scroll">Register</a>
+                                </div>
+                            </div><!--End Button Row-->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="mouse-icon hidden-xs">
+        <div class="scroll"></div>
+    </div>
+
+    <section id="be-the-first" class="pad-xl">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-8 col-sm-offset-2 text-center margin-30 wow fadeIn" data-wow-delay="0.6s">
+                    <h2>Planning for Success</h2>
+                    <p class="lead">Using Sucre Lucre to take control of your Financial Future.</p>
+                </div>
+            </div>
+
+            <div class="iphone wow fadeInUp" data-wow-delay="1s">
+                <img src="~/assetsLanding/img/IceCreamCone.png" height="620">
+            </div>
+        </div>
+    </section>
+
+    <section id="main-info" class="pad-xl">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-4 wow fadeIn" data-wow-delay="0.4s">
+                    <hr class="line purple">
+                    <h3>Households</h3>
+                    <p>
+                        A Household is the basic organizing principle of Sucre Lucre. A user may create their own Household upon registering. As "Head" of Household you may invite
+                        other users to join, create accounts and manage budgets.
+                    </p>
+                </div>
+                <div class="col-sm-4 wow fadeIn" data-wow-delay="0.8s">
+                    <hr class="line blue">
+                    <h3>Accounts and Transactions</h3>
+                    <p>An account is created with a balance of $0. Transactions can be added to accounts as either an expense or income. Transactions are filterable by several criteria including amount range, date range, and type of expense.</p>
+                </div>
+                <div class="col-sm-4 wow fadeIn" data-wow-delay="1.2s">
+                    <hr class="line yellow">
+                    <h3>Budget Categories</h3>
+                    <p>
+                        Each household comes with four basic budget categories, containing 3 items each. Transaction expenses are tied to various budget category items. These expenses are counted against the allocated budget for that category, which can be changed by the Head of household.
+                        At the end of each month, an item's accumulated expenses are reset to zero.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!--Pricing-->
+    <section id="pricing" class="pad-lg">
+        <div class="container">
+
+            <div class="row">
+                <div class="col-md-4 col-md-offset-4">
+                    <div class="login-panel panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Create a New Account</h3>
+                        </div>
+                        <div class="panel-body">
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                            @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { Email = ViewBag.email, enctype = "Multipart/form-data" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <fieldset>
+                                    <div class="form-group">
+                                        <input name="FirstName" class="form-control" placeholder="First Name" maxlength="30" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <input name="LastName" class="form-control" placeholder="Last Name" maxlength="30" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" required />
+                                    </div>
+                                    @if (ViewBag.email != null)
+                                    {
+                                        <div class="form-group">
+                                            <input name="Email" class="form-control" value="@ViewBag.email" readonly />
+                                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="form-group">
+                                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Email" })
+                                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                                        </div>
+                                    }
+
+                                    <div class="form-group">
+                                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Password" })
+                                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Confirm Password" })
+                                        @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fileUpload"><strong>Upload a Profile Pic (Optional):</strong></label>
+                                        <input name="profilePic" type="file" id="fileUpload" />
+                                    </div>
+                                    <button class="btn btn-lg btn-success btn-block" type="submit"><i class="fa fa-user-plus"></i> Create Account</button>
+                                </fieldset>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @if (ViewBag.permission && ViewBag.householdId == null)
+    {
+        <section id="invite" class="pad-lg light-gray-bg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-8 col-sm-offset-2 text-center">
+                        <i class="fa fa-home fa-4x margin-40"></i>
+                        <h2 class="black">Create A Household</h2>
+                        <br />
+
+                        <div class="row">
+                            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
+                                <form action="/Households/Create" method="post" role="form">
+                                    @Html.AntiForgeryToken()
+                                    <div class="form-group">
+                                        <input type="text" name="Name" class="form-control" pattern="\w([\w\s\W]+)?" title="first character must be alphanumeric" required maxlength="30" id="exampleInputEmail1" placeholder="Enter Name">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-lg">Create Household</button>
+                                </form>
+                            </div>
+                        </div><!--End Form row-->
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+
+    <footer>
+        <div class="container">
+
+            <div class="row">
+                <div class="col-sm-8 margin-20">
+                    <ul class="list-inline social">
+                        <li>Github Repository for Sucre Lucre</li>
+                        <a href="https://github.com/prhineh1/Budgeter" target="_blank"><i class="fa fa-3x fa-github" aria-hidden="true"></i></a>
+                    </ul>
+                </div>
+
+                <div class="col-sm-4 text-right">
+                    <p>
+                        <small>
+                            Copyright &copy; 2017. All rights reserved. <br>
+                            Created by <a href="http://visualsoldiers.com">Visual Soldiers</a><br />Modified by Phil Rhinehart<br />Logo by <a href="https://logomakr.com">logomakr.com</a>
+                        </small>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+    <!--House deleted Modal-->
+
+    <div id="householdDeleted" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:30%; background-color:white;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" style="display:flex; justify-content:space-around">
+                <h4 class="text-info text-center">This Household has been deleted</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="~/assetsLanding/js/jquery-1.11.0.min.js"><\/script>')</script>
+    <script src="~/assetsLanding/js/wow.min.js"></script>
+    <script src="~/assetsLanding/js/bootstrap.min.js"></script>
+    <script src="~/assetsLanding/js/main.js"></script>
+
+@if (TempData["warn"] == "deleted")
+{
+    <script>
+        $('#householdDeleted').modal('toggle');
+    </script>
+}
+
+</body>
+</html>

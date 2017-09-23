@@ -2,9 +2,6 @@
 @using Budgeter.Helper;
 @using Microsoft.AspNet.Identity;
 
-@{ 
-    var userId = User.Identity.GetUserId();
-}
 
 <h2><i class="fa fa-money" aria-hidden="true"></i> @ViewBag.account.Name Transactions</h2>
 
@@ -14,7 +11,7 @@
     </div>
     <div class="col-md-2">
         <h4>Balance:</h4>
-        <p><strong>$@BankAccountHelper.Balance(ViewBag.account.Id)</strong></p>
+        <p><strong>$@ViewBag.accountBalance</strong></p>
     </div>
     @if (TempData["refresh"] == "refresh")
     {
@@ -22,7 +19,7 @@
             <a href="transactions/index?accountId=@ViewBag.account.Id"><button class="btn btn-info">Restore all Transactions</button></a>
         </div>
     }
-    @if (RoleHelper.IsUserInRole(userId, "Head") || RoleHelper.IsUserInRole(userId, "Admin"))
+    @if (ViewBag.permission)
     {
         <div class="col-md-4">
             <i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i>
@@ -31,7 +28,7 @@
     }
 </div>
 <div class="row">
-    @if (RoleHelper.IsUserInRole(userId, "Head") || RoleHelper.IsUserInRole(userId, "Admin"))
+    @if (ViewBag.permission)
     {
         <div class="col-md-3">
             <div class="panel panel-default">
@@ -50,7 +47,7 @@
                         <br />
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-calendar" aria-hidden="true"></i></span>
-                            <input type="text" id="DateEdit" style="width:150px; background-color:white;" name="Date" placeholder="Date" class="form-control" readonly required />
+                            <input type="text" id="DateEdit" style="width:150px; background-color:white;" name="Date" placeholder="Date" class="form-control" maxlength="0" required />
                         </div>
                         <br />
                         <div class="input-group">
@@ -117,7 +114,7 @@
                             {
                                 <tr class="transactionRow">
                                     <td>
-                                        <input class="transactionInput" value="@item.Date" style="display:none;" />
+                                        <input class="transactionInput" value="@item.Date.ToShortDateString()" style="display:none;" />
                                         @item.Date.ToString("d")
                                     </td>
                                     <td>@item.EnteredBy.FullName</td>
@@ -286,7 +283,7 @@
                     <br />
                     <div class="input-group">
                         <span class="input-group-addon"><i class="fa fa-calendar" aria-hidden="true"></i></span>
-                        <input type="text" id="Date" style="width:150px; background-color:white;" name="Date" value="" placeholder="Date" class="form-control" readonly  />
+                        <input type="text" id="Date" style="width:150px; background-color:white;" name="Date" value="" placeholder="Date" class="form-control" maxlength="0" required  />
                     </div>
                     <br />
                     <div class="input-group">
@@ -323,6 +320,9 @@
 
 @section Scripts {
     <script>
+        $('#transactionTable').DataTable();
+        $('#filterDate1').datepicker();
+        $('#filterDate2').datepicker();
         var budgetNode = document.getElementById('BudgetItemId');
         var submitNode = document.getElementById('lastBreak');
         $("#income").click(function() {
@@ -347,10 +347,6 @@
         document.getElementById('expenseEdit').addEventListener("click", function () {
             document.getElementById('transactionBodyEdit').insertBefore(budgetNodeEdit, submitNodeEdit)
         });
-
-        $('#transactionTable').DataTable();
-        $('#filterDate1').datepicker();
-        $('#filterDate2').datepicker();
 
     </script>
     <!----Script for Edit panel-->
@@ -417,7 +413,7 @@
             });
 
             //set transaction Id and return Url for Delete button
-            $('#deleteTransactionForm').prop('action', 'transactions/delete?id=' + transactionIdEdit + '&returnUrl=' + '@Url.Action("index", "transactions", new {accountId = ViewBag.account.Id })');
+            $('#deleteTransactionForm').prop('action', 'transactions/delete?id=' + transactionIdEdit + '&accountId=' + @ViewBag.account.Id + '&returnUrl=' + '@Url.Action("index", "transactions", new {accountId = ViewBag.account.Id })');
         });
     </script>
     <!---Scripts for filter search-->

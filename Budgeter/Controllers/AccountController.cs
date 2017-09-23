@@ -275,7 +275,7 @@ namespace Budgeter.Controllers
                 {
                     Subject = "Reset Password",
                     Body = "Please reset your password by clicking <a href=\"" + callbackUrl + "\">here</a>",
-                    SourceName = "Budgeter",
+                    SourceName = "Sucre Lucre",
                     DestinationEmail = user.Email
                 };
                 //await UserManager.SendEmailAsync(user.Id, "Reset Password", "Please reset your password by clicking <a href=\"" + callbackUrl + "\">here</a>");
@@ -402,7 +402,12 @@ namespace Budgeter.Controllers
             switch (result)
             {
                 case SignInStatus.Success:
-                    return RedirectToAction("index","home");
+                    var userId = UserManager.FindByEmail(loginInfo.Email).Id;
+                    if (db.Users.FirstOrDefault(u => u.Id == userId).HouseHoldId == null)
+                    {
+                        return RedirectToAction("index", "home");
+                    }
+                    return RedirectToAction("details","households", new { id = db.Users.FirstOrDefault(u => u.Id == userId).HouseHoldId });
                 case SignInStatus.LockedOut:
                     return View("Lockout");
                 case SignInStatus.RequiresVerification:
@@ -436,7 +441,7 @@ namespace Budgeter.Controllers
                 {
                     return View("ExternalLoginFailure");
                 }
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, FirstName = model.Fname, LastName = model.Lname };
                 var result = await UserManager.CreateAsync(user);
                 if (result.Succeeded)
                 {

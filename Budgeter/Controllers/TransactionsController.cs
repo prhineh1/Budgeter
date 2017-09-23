@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using Budgeter.Models;
 using Budgeter.Helper;
 using Microsoft.AspNet.Identity;
+using System.Threading.Tasks;
 
 namespace Budgeter.Controllers
 {
@@ -18,7 +19,7 @@ namespace Budgeter.Controllers
         private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET: Transactions
-        public ActionResult Index(int accountId)
+        public  ActionResult Index(int accountId)
         {
             var householdId = db.BankAccounts.Find(accountId).HouseholdId;
             var userId = User.Identity.GetUserId();
@@ -34,24 +35,26 @@ namespace Budgeter.Controllers
 
             var transactions = db.Transactions.Include(t => t.BankAccount).Include(t => t.BudgetItem).Include(t => t.EnteredBy).Where(t => t.BankAccountId == accountId);
             ViewBag.account = db.BankAccounts.Find(accountId);
+            ViewBag.accountBalance = BankAccountHelper.Balance(accountId);
             if (db.Transactions.Count() > 0)
             {
                 ViewBag.maxAmount = db.Transactions.Where(t => t.BankAccountId == accountId).Select(t => t.Amount).Max();
                 ViewBag.maxDate = db.Transactions.Where(t => t.BankAccountId == accountId).Select(t => t.Date).Max().Date;
             }
             ViewBag.BudgetItemId = new SelectList(db.BudgetItems.Where(b => b.HouseholdId == householdId).ToList(), "Id", "Name", "Budget.Name", null, null);
-
+            ViewBag.permission =  RoleHelper.IsUserInRole(userId, "Head") ||  RoleHelper.IsUserInRole(userId, "Admin");
             return View(transactions.ToList());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Index(List<int> filterAmount, List<DateTime> filterDate, int accountId)
+        public async Task<ActionResult> Index(List<int> filterAmount, List<DateTime> filterDate, int accountId)
         {
-            var filterList = db.Transactions.Where(t => t.BankAccountId == accountId && t.Date >= filterDate.Min() && t.Date <= filterDate.Max()
+            var filterList = db.Transactions.AsNoTracking().Where(t => t.BankAccountId == accountId && t.Date >= filterDate.Min() && t.Date <= filterDate.Max()
                                                     && t.Amount >= filterAmount.Min() && t.Amount <= filterAmount.Max()).ToList();
+            var transactions = db.Transactions.AsNoTracking().ToList();
             ViewBag.account = db.BankAccounts.Find(accountId);
-            if (db.Transactions.Count() > 0)
+            if (filterList.Count() > 0)
             {
                 ViewBag.maxAmount = filterList.Where(t => t.BankAccountId == accountId).Select(t => t.Amount).Max();
                 ViewBag.maxDate = filterList.Where(t => t.BankAccountId == accountId).Select(t => t.Date).Max().Date;
@@ -62,7 +65,9 @@ namespace Budgeter.Controllers
             {
                 TempData["refresh"] = "refresh";
             }
-
+            var userId = User.Identity.GetUserId();
+            ViewBag.accountBalance = BankAccountHelper.Balance(accountId);
+            ViewBag.permission =  RoleHelper.IsUserInRole(userId, "Head") ||  RoleHelper.IsUserInRole(userId, "Admin");
             return View(filterList);
 
         }
@@ -79,11 +84,16 @@ namespace Budgeter.Controllers
             {
                 transaction.Date = Convert.ToDateTime(transaction.Date);
                 db.Transactions.Add(transaction);
-                db.SaveChanges();
+
                 var userId = User.Identity.GetUserId();
                 var householdId = (int)db.Users.FirstOrDefault(u => u.Id == userId).HouseHoldId;
+
+                db.SaveChanges();
+                if (transaction.BudgetItemId != null)
+                {
+                    BankAccountHelper.OverBudget(db.BudgetItems.FirstOrDefault(b => b.Id == transaction.BudgetItemId).BudgetId);
+                }
                 NotificationHelper.AddTransaction(userId, householdId, transaction.Id);
-                
                 if (returnUrl == null)
                 {
                     return RedirectToAction("Index", "bankaccounts", new { householdId = db.BankAccounts.Find(transaction.BankAccountId).HouseholdId });
@@ -94,9 +104,14 @@ namespace Budgeter.Controllers
                 }
             }
 
-            ViewBag.BankAccountId = new SelectList(db.BankAccounts, "Id", "Name", transaction.BankAccountId);
-            ViewBag.BudgetItemId = new SelectList(db.BudgetItems, "Id", "Name", transaction.BudgetItemId);
-            return View(transaction);
+            if (returnUrl == null)
+            {
+                return RedirectToAction("Index", "bankaccounts", new { householdId = db.BankAccounts.Find(transaction.BankAccountId).HouseholdId });
+            }
+            else
+            {
+                return Redirect(returnUrl);
+            }
         }
 
         // POST: Transactions/Edit/5
@@ -111,9 +126,14 @@ namespace Budgeter.Controllers
                 var oldTransaction = db.Transactions.AsNoTracking().FirstOrDefault(t => t.Id == transaction.Id);
                 transaction.ReconciledExpense = transaction.Expense;
                 transaction.Expense = oldTransaction.Expense;
+                transaction.Date = Convert.ToDateTime(transaction.Date);
 
                 db.Entry(transaction).State = EntityState.Modified;
                 db.SaveChanges();
+                if (transaction.BudgetItemId != null)
+                {
+                    BankAccountHelper.OverBudget(db.BudgetItems.FirstOrDefault(b => b.Id == transaction.BudgetItemId).BudgetId);
+                }
                 return Redirect(returnUrl);
             }
 
@@ -123,11 +143,12 @@ namespace Budgeter.Controllers
         // POST: Transactions/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id, string returnUrl)
+        public ActionResult DeleteConfirmed(int id, int accountId, string returnUrl)
         {
             Transaction transaction = db.Transactions.Find(id);
             db.Transactions.Remove(transaction);
             db.SaveChanges();
+            BankAccountHelper.Balance(accountId);
             return Redirect(returnUrl);
         }
 

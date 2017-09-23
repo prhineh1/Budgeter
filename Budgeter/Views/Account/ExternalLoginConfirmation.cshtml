@@ -1,35 +1,78 @@
 ﻿@model Budgeter.Models.ExternalLoginConfirmationViewModel
 @{
-    ViewBag.Title = "Register";
+    Layout = null;
 }
-<h2>@ViewBag.Title.</h2>
-<h3>Associate your @ViewBag.LoginProvider account.</h3>
 
-@using (Html.BeginForm("ExternalLoginConfirmation", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-{
-    @Html.AntiForgeryToken()
+<!DOCTYPE html>
+<html>
 
-    <h4>Association Form</h4>
-    <hr />
-    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-    <p class="text-info">
-        You've successfully authenticated with <strong>@ViewBag.LoginProvider</strong>.
-        Please enter a user name for this site below and click the Register button to finish
-        logging in.
-    </p>
-    <div class="form-group">
-        <div class="col-md-4">
-            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Email" })
-            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+<head>
+    <meta charset="UTF-8" />
+    <title>Sucre Lucre</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="" name="description" />
+    <meta content="" name="author" />
+    <!--[if IE]>
+       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+       <![endif]-->
+    <!-- GLOBAL STYLES -->
+    <!-- PAGE LEVEL STYLES -->
+    <link rel="stylesheet" href="~/Content/font-awesome.css" />
+    <link rel="stylesheet" href="~/assets/plugins/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/assets/css/login.css" />
+    <link rel="stylesheet" href="~/assets/plugins/magic/magic.css" />
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon">
+    <!-- END PAGE LEVEL STYLES -->
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+</head>
+<!-- END HEAD -->
+
+<body style="background-color:#6d3f96">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4 text-center" style="margin-bottom:30px;">
+                <img src="~/assetsLanding/img/Logomakr_7dwC2L.png" width="160" height="80" alt="Logo">
+            </div>
+            <div class="col-md-4 col-md-offset-4">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading">
+                        You've successfully authenticated with <strong>@ViewBag.LoginProvider</strong>.
+                        Please confirm your email address, enter your first and last names and click the Register button to finish
+                        logging in
+                    </div>
+                    <div class="panel-body">
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                        @using (Html.BeginForm("ExternalLoginConfirmation", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <fieldset>
+                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Email" })
+                                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                                <br />
+                                <input name="Fname" class="form-control" placeholder="First Name" maxlength="30" pattern="\w([\w\s\W]+)?" required title="first character must be alphanumeric" />
+                                <br />
+                                <input name="Lname" class="form-control" placeholder="Last Name" maxlength="30" pattern="\w([\w\s\W]+)?" required title="first character must be alphanumeric" />
+                                <br />
+                                <button class="btn btn-lg btn-success btn-block" type="submit"><i class="fa fa-user-plus"></i> Create Account</button>
+                            </fieldset>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="form-group">
-        <div class="col-md-offset-2 col-md-10">
-            <input type="submit" class="btn btn-default" value="Register" />
-        </div>
-    </div>
-}
 
-@section Scripts {
-    @Scripts.Render("~/bundles/jqueryval")
-}
+    <!-- Core Scripts - Include with every page -->
+    <script src="~/assets/plugins/jquery-2.0.3.min.js"></script>
+    <script src="~/assets/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="~/assets/js/login.js"></script>
+
+</body>
+
+</html>
